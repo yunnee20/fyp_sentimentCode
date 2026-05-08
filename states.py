@@ -4,16 +4,13 @@ from score import calculate_final_score
 from voicetotext import voice_to_text, check_ready
 from voice_freqpitch import start_voice_stream, stop_voice_stream, get_voice_score
 
-from face import start_face_stream, stop_face_stream, get_face_score
-
-
 ready = False
 startTest = False
-startQues = False
 
 def welcome():
     global ready
-    print("now playing welcome video and music")
+
+    print("Now playing welcome video and music.")
     ready = True
 
 
@@ -21,55 +18,40 @@ def Ready():
     global startTest
 
     print("Say ready after the beep...")
+
     text = voice_to_text(duration=5)
 
-    if check_ready(text):
+    if check_ready():
         startTest = True
         return True
 
     return False
 
 
-# def play_question(question_number):
-#     print(f"now playing question {question_number} video")
+def run_question(question_number, answer_duration=10):
+    print("")
+    print(f"---------- QUESTION {question_number} START ----------")
 
-#     # start real-time pitch/energy stream
-#     start_voice_stream()
-
-#     # record answer and transcribe
-#     answer_text = voice_to_text(duration=10)
-
-#     # stop real-time stream
-#     stop_voice_stream()
-
-#     print("Answer:", answer_text)
-
-#     return answer_text
-
-
-
-def run_question(question_number):
-    print(f"Question {question_number} started")
-
-    # start real-time data to TouchDesigner
-    start_face_stream()
+    # Start real-time streams to TouchDesigner
+    start_face_stream(camera_index=1, show=True)
     start_voice_stream()
 
-    # record + transcribe while streams are running
-    transcript = voice_to_text(duration=10)
+    # Record and transcribe answer while streams are running
+    transcript = voice_to_text(duration=answer_duration)
 
-    # stop real-time streams
+    # Stop real-time streams when answer ends
     stop_face_stream()
     stop_voice_stream()
 
-    # get average scores collected during answer
+    # Get average scores collected during the answer
     face_score = get_face_score()
     voice_score = get_voice_score()
 
-    # text score after transcription
+    # Analyze transcript
     text_result = analyze_text_sentiment(transcript)
-    text_score = text_result["text_score"]
+    text_score = text_result["suboptimal_score"]
 
+    # Combine scores
     question_score = calculate_final_score(
         face_score=face_score,
         voice_score=voice_score,
@@ -79,53 +61,19 @@ def run_question(question_number):
     question_result = {
         "question_number": question_number,
         "transcript": transcript,
-        "face_score": face_score,
-        "voice_score": voice_score,
+        "face_score": round(face_score, 2),
+        "voice_score": round(voice_score, 2),
+        "text_score": round(text_score, 2),
         **text_result,
         **question_score
     }
 
-    print("------ QUESTION RESULT ------")
-    print(question_result)
-
-    return question_result
-    print(f"Question {question_number} started")
-    start_voice_stream()
-    # 1. Capture face snapshot
-    face_result = face_trigger(face_start=True, show=True)
-    answer_text = voice_to_text(duration=10)
-    if face_result is None:
-        face_score = 50
-    else:
-        face_score = face_result["face_score"]
-
-    # 2. Record and transcribe voice
-    transcript = voice_to_text(duration=8)
-
-    # 3. Analyse text sentiment
-    text_result = analyze_text_sentiment(transcript)
-    text_score = text_result["text_score"]
-
-    # 4. Temporary voice score
-    # later replace this with real voice score
-    voice_score = 60
-
-    # 5. Combine question score
-    question_score = calculate_final_score(
-        face_score=face_score,
-        voice_score=voice_score,
-        text_score=text_score
-    )
-
-    question_result = {
-        "question_number": question_number,
-        "transcript": transcript,
-        **face_result,
-        **text_result,
-        **question_score
-    }
-
-    print("------ QUESTION RESULT ------")
-    print(question_result)
+    print("")
+    print("---------- QUESTION RESULT ----------")
+    print("Transcript:", transcript)
+    print("Face Score:", round(face_score, 2))
+    print("Voice Score:", round(voice_score, 2))
+    print("Text Score:", round(text_score, 2))
+    print("Final:", question_score)
 
     return question_result

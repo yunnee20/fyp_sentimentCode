@@ -2,7 +2,9 @@ import sounddevice as sd
 from scipy.io.wavfile import write
 from faster_whisper import WhisperModel
 
-model = WhisperModel("tiny", device="cpu", compute_type="int8")
+model = WhisperModel("base", device="cpu", compute_type="int8")
+global transcribed_text
+transcribed_text = "ready"
 
 def voice_to_text(duration=5, filename="test_voice.wav"):
     sample_rate = 16000
@@ -24,14 +26,15 @@ def voice_to_text(duration=5, filename="test_voice.wav"):
     text = ""
     for segment in segments:
         text += segment.text.strip() + " "
+    # global transcribed_text
+    # transcribed_text = text.lower()
+    return text
 
-    return text.lower().strip()
 
-
-def check_ready(text):
-    if "ready" in text:
+def check_ready():
+    if "ready" in transcribed_text:
         print("Welcome to the game! Let's get started.")
         return True
     else:
-        print("User said:", text)
+        print("User said:", transcribed_text)
         return False 
