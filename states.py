@@ -1,3 +1,7 @@
+from pythonosc.udp_client import SimpleUDPClient
+
+client = SimpleUDPClient("127.0.0.1", 8001)
+
 from face import start_face_stream, stop_face_stream, get_face_score
 from textsentiment import analyze_text_sentiment
 from score import calculate_final_score
@@ -8,6 +12,7 @@ ready = False
 startTest = False
 
 def welcome():
+    client.send_message("/state", 0)
     global ready
 
     print("Now playing welcome video and music.")
@@ -31,7 +36,7 @@ def Ready():
 def run_question(question_number, answer_duration=10):
     print("")
     print(f"---------- QUESTION {question_number} START ----------")
-
+    client.send_message("/state", question_number)
     # Start real-time streams to TouchDesigner
     start_face_stream(camera_index=1, show=True)
     start_voice_stream()
