@@ -1,22 +1,41 @@
-import voicetotext
-from voicetotext import *
+from voicetotext import voice_to_text, check_ready
+from voice_freqpitch import start_voice_stream, stop_voice_stream
 
-global ready
-ready =False
+ready = False
+startTest = False
+startQues = False
 
-# welcoming state
 def welcome():
-    #trigger welcome video and music, are you ready
-    print("now playing welcome video and music")
     global ready
+    print("now playing welcome video and music")
     ready = True
-    return ready
+
 
 def Ready():
-    if ready == True:
-        #trigger listening
-        voicetotext()
-        r = False
-        readyText(r)
-        
-        
+    global startTest
+
+    print("Say ready after the beep...")
+    text = voice_to_text(duration=5)
+
+    if check_ready(text):
+        startTest = True
+        return True
+
+    return False
+
+
+def play_question(question_number):
+    print(f"now playing question {question_number} video")
+
+    # start real-time pitch/energy stream
+    start_voice_stream()
+
+    # record answer and transcribe
+    answer_text = voice_to_text(duration=10)
+
+    # stop real-time stream
+    stop_voice_stream()
+
+    print("Answer:", answer_text)
+
+    return answer_text

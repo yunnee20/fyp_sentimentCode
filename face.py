@@ -20,9 +20,6 @@ def get_cv2():
 
     return cv2
 
-def hello():
-    print("Hello from face.py!")
-
 def get_mediapipe():
     global mp
 
@@ -126,13 +123,13 @@ def face_trigger(face_start=True, voice_score=60, text_score=65, camera_index=1,
             score_percent = max(0, min(100, score))
 
             # print results 
-            print("------ STATS ------") 
-            print("Valence:", round(valence_percent, 3))
-            print("Thinking:", round(thinking_percent, 3))
-            print("Arousal:", round(arousal_percent, 3))
-            print("Anxious:", round(anxious_percent, 3))  
-            print("------ RESULT ------")
-            print("Overall Score:", round(score, 2), "%")
+            # print("------ STATS ------") 
+            # print("Valence:", round(valence_percent, 3))
+            # print("Thinking:", round(thinking_percent, 3))
+            # print("Arousal:", round(arousal_percent, 3))
+            # print("Anxious:", round(anxious_percent, 3))  
+            # print("------ RESULT ------")
+            # print("Overall Score:", round(score, 2), "%")
 
             # ----------------------------
             # FINAL SCORE
