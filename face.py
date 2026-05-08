@@ -1,4 +1,9 @@
 from pathlib import Path
+from pythonosc.udp_client import SimpleUDPClient
+
+#SETUP
+
+client = SimpleUDPClient("127.0.0.1", 8000)
 
 # SETUP
 
@@ -122,38 +127,6 @@ def face_trigger(face_start=True, voice_score=60, text_score=65, camera_index=1,
             score = 0.25*valence_percent + 0.25*arousal_percent + 0.2*thinking_percent + 0.2*anxious_percent + 0.1*stability_percent
             score_percent = max(0, min(100, score))
 
-            # print results 
-            # print("------ STATS ------") 
-            # print("Valence:", round(valence_percent, 3))
-            # print("Thinking:", round(thinking_percent, 3))
-            # print("Arousal:", round(arousal_percent, 3))
-            # print("Anxious:", round(anxious_percent, 3))  
-            # print("------ RESULT ------")
-            # print("Overall Score:", round(score, 2), "%")
-
-            # ----------------------------
-            # FINAL SCORE
-            # ----------------------------
-            total = 0.5*score_percent + 0.2*voice_score + 0.3*text_score
-            final_score = max(0, min(100, total))
-
-            # authenticity
-            authenticity = 100 - final_score
-
-            # Print results
-            print("")
-            print("----------FINAL STATS----------")
-            print("Face Score:", score_percent, "%")
-            print("Voice Score:", voice_score, "%")     
-            print("Text Score:", text_score, "%")
-            print("------ RESULT ------")
-            print("Overall Score:", round(final_score), "%")
-            if final_score >=50: 
-                print("Optimal")
-                print("Authenticity: Low (", round(authenticity, 2), "%)")
-            else:
-                print("Suboptimal")
-
             result_data = {
                 "valence": valence_percent,
                 "thinking": thinking_percent,
@@ -161,10 +134,6 @@ def face_trigger(face_start=True, voice_score=60, text_score=65, camera_index=1,
                 "anxious": anxious_percent,
                 "stability": stability_percent,
                 "face_score": score_percent,
-                "voice_score": voice_score,
-                "text_score": text_score,
-                "final_score": final_score,
-                "authenticity": authenticity,
             }
         else:
             print("No face detected.")
@@ -176,6 +145,28 @@ def face_trigger(face_start=True, voice_score=60, text_score=65, camera_index=1,
 
     return result_data
 
+FACE_POINTS = {
+    "brow_left": 65,
+    "brow_right": 295,
+    "mouth": 13,
+    "jaw": 152,
+    "eye_left": 159,
+    "eye_right": 386,
+}
+
+def send_face_to_td(result, data, face_score):
+    landmarks = result.face_landmarks[0]
+
+    for name, idx in FACE_POINTS.items():
+        p = landmarks[idx]
+        client.send_message(f"/pos/{name}_x", float(p.x))
+        client.send_message(f"/pos/{name}_y", float(p.y))
+
+    client.send_message("/face/valence", float(data["valence"]))
+    client.send_message("/face/thinking", float(data["thinking"]))
+    client.send_message("/face/arousal", float(data["arousal"]))
+    client.send_message("/face/anxious", float(data["anxious"]))
+    client.send_message("/face/score", float(face_score))
 
 def close_face_camera():
     global cap

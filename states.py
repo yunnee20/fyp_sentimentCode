@@ -1,3 +1,6 @@
+from face import face_trigger
+from textsentiment import analyze_text_sentiment
+from score import calculate_final_score
 from voicetotext import voice_to_text, check_ready
 from voice_freqpitch import start_voice_stream, stop_voice_stream
 
@@ -24,18 +27,60 @@ def Ready():
     return False
 
 
-def play_question(question_number):
-    print(f"now playing question {question_number} video")
+# def play_question(question_number):
+#     print(f"now playing question {question_number} video")
 
-    # start real-time pitch/energy stream
+#     # start real-time pitch/energy stream
+#     start_voice_stream()
+
+#     # record answer and transcribe
+#     answer_text = voice_to_text(duration=10)
+
+#     # stop real-time stream
+#     stop_voice_stream()
+
+#     print("Answer:", answer_text)
+
+#     return answer_text
+
+def run_question(question_number):
+    print(f"Question {question_number} started")
     start_voice_stream()
-
-    # record answer and transcribe
+    # 1. Capture face snapshot
+    face_result = face_trigger(face_start=True, show=True)
     answer_text = voice_to_text(duration=10)
+    if face_result is None:
+        face_score = 50
+    else:
+        face_score = face_result["face_score"]
 
-    # stop real-time stream
-    stop_voice_stream()
+    # 2. Record and transcribe voice
+    transcript = voice_to_text(duration=8)
 
-    print("Answer:", answer_text)
+    # 3. Analyse text sentiment
+    text_result = analyze_text_sentiment(transcript)
+    text_score = text_result["text_score"]
 
-    return answer_text
+    # 4. Temporary voice score
+    # later replace this with real voice score
+    voice_score = 60
+
+    # 5. Combine question score
+    question_score = calculate_final_score(
+        face_score=face_score,
+        voice_score=voice_score,
+        text_score=text_score
+    )
+
+    question_result = {
+        "question_number": question_number,
+        "transcript": transcript,
+        **face_result,
+        **text_result,
+        **question_score
+    }
+
+    print("------ QUESTION RESULT ------")
+    print(question_result)
+
+    return question_result

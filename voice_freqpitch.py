@@ -8,7 +8,8 @@ client = SimpleUDPClient("127.0.0.1", 8000)
 sample_rate = 16000
 block_duration = 0.5
 block_size = int(sample_rate * block_duration)
-
+voice_energy_values = []
+voice_pitch_values = []
 voice_stream = None
 
 def audio_callback(indata, frames, time, status):
@@ -31,6 +32,9 @@ def audio_callback(indata, frames, time, status):
     client.send_message("/voice/energy", float(energy))
     client.send_message("/voice/pitch", float(pitch))
     client.send_message("/voice/pitch_norm", float(pitch_norm))
+
+    voice_energy_values.append(energy)
+    voice_pitch_values.append(pitch_norm)
 
     print("energy:", round(energy, 3), "pitch:", round(pitch, 1))
 
@@ -57,3 +61,13 @@ def stop_voice_stream():
         voice_stream.close()
         voice_stream = None
         print("Voice stream stopped")
+
+def get_voice_score():
+    if not voice_energy_values:
+        return 50
+
+    avg_energy = sum(voice_energy_values) / len(voice_energy_values)
+    avg_pitch = sum(voice_pitch_values) / len(voice_pitch_values)
+
+    voice_score = (avg_energy * 50) + (avg_pitch * 50)
+    return max(0, min(100, voice_score))
