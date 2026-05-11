@@ -177,7 +177,7 @@ def face_loop(camera_index=1, show=True):
             data = {b.category_name: b.score for b in blendshapes}
 
             values = calculate_face_values(data)
-
+            face_value_history.append(values)
             face_scores.append(values["face_score"])
 
             send_landmarks_to_td(result)
@@ -207,13 +207,14 @@ def face_loop(camera_index=1, show=True):
 
 
 def start_face_stream(camera_index=1, show=True):
-    global face_running, face_thread, face_scores
+    global face_running, face_thread, face_scores, face_value_history
 
     if face_running:
         print("Face stream already running.")
         return
 
     face_scores = []
+    face_value_history = []
     face_running = True
 
     face_thread = threading.Thread(
@@ -244,6 +245,10 @@ def get_face_score():
 
     return sum(face_scores) / len(face_scores)
 
+def face_details_score(valence, thinking, arousal, anxious):
+    return valence, thinking, arousal, anxious
+
+
 
 def close_face_camera():
     global cap
@@ -254,3 +259,21 @@ def close_face_camera():
 
     if cv2 is not None:
         cv2.destroyAllWindows()
+
+def get_average_face_values():
+    if len(face_value_history) == 0:
+        return {
+            "valence": 0,
+            "thinking": 0,
+            "arousal": 0,
+            "anxious": 0,
+            "face_score": 50
+        }
+
+    return {
+        "valence": sum(v["valence"] for v in face_value_history) / len(face_value_history),
+        "thinking": sum(v["thinking"] for v in face_value_history) / len(face_value_history),
+        "arousal": sum(v["arousal"] for v in face_value_history) / len(face_value_history),
+        "anxious": sum(v["anxious"] for v in face_value_history) / len(face_value_history),
+        "face_score": sum(v["face_score"] for v in face_value_history) / len(face_value_history),
+    }

@@ -2,9 +2,11 @@ from states import welcome, Ready, run_question
 from score import calculate_total_score
 # from receipt import generate_receipt
 from face import close_face_camera
+from receipt import save_and_print_receipt
 
 NUM_QUESTIONS = 3
 ANSWER_DURATION = 10
+
 
 
 def main():
@@ -44,6 +46,11 @@ def main():
     # ----------------------------
     # RECEIPT
     # ----------------------------
+    avg_valence = sum(q["valence"] for q in question_results) / len(question_results)
+    avg_thinking = sum(q["thinking"] for q in question_results) / len(question_results)
+    avg_arousal = sum(q["arousal"] for q in question_results) / len(question_results)
+    avg_anxious = sum(q["anxious"] for q in question_results) / len(question_results)
+
     receipt_data = {
         "score": total_result["final_score"],
         "face": total_result["face_score"],
@@ -52,28 +59,13 @@ def main():
         "label": total_result["label"],
         "authenticity": total_result["authenticity"],
 
-        # optional receipt values
-        "valence": round(
-            sum(q.get("valence", 0) for q in question_results) / len(question_results),
-            2
-        ),
-        "thinking": round(
-            sum(q.get("thinking", 0) for q in question_results) / len(question_results),
-            2
-        ),
-        "arousal": round(
-            sum(q.get("arousal", 0) for q in question_results) / len(question_results),
-            2
-        ),
-        "anxious": round(
-            sum(q.get("anxious", 0) for q in question_results) / len(question_results),
-            2
-        ),
+        "valence": round(avg_valence, 2),
+        "thinking": round(avg_thinking, 2),
+        "arousal": round(avg_arousal, 2),
+        "anxious": round(avg_anxious, 2),
     }
 
-    # img = generate_receipt(receipt_data)
-    # img.save("final_receipt.png")
-    # img.show()
+    save_and_print_receipt(receipt_data)
 
     # Later:
     # print_receipt("final_receipt.png")

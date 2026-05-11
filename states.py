@@ -2,11 +2,12 @@ from pythonosc.udp_client import SimpleUDPClient
 
 client = SimpleUDPClient("127.0.0.1", 8001)
 
-from face import start_face_stream, stop_face_stream, get_face_score
+from face import start_face_stream, stop_face_stream, get_average_face_values
 from textsentiment import analyze_text_sentiment
 from score import calculate_final_score
 from voicetotext import voice_to_text, check_ready
 from voice_freqpitch import start_voice_stream, stop_voice_stream, get_voice_score
+
 
 ready = False
 startTest = False
@@ -49,7 +50,8 @@ def run_question(question_number, answer_duration=10):
     stop_voice_stream()
 
     # Get average scores collected during the answer
-    face_score = get_face_score()
+    face_values = get_average_face_values()
+    face_score = face_values["face_score"]
     voice_score = get_voice_score()
 
     # Analyze transcript
@@ -66,9 +68,16 @@ def run_question(question_number, answer_duration=10):
     question_result = {
         "question_number": question_number,
         "transcript": transcript,
+
+        "valence": round(face_values["valence"], 2),
+        "thinking": round(face_values["thinking"], 2),
+        "arousal": round(face_values["arousal"], 2),
+        "anxious": round(face_values["anxious"], 2),
+
         "face_score": round(face_score, 2),
         "voice_score": round(voice_score, 2),
         "text_score": round(text_score, 2),
+
         **text_result,
         **question_score
     }
