@@ -13,7 +13,7 @@ ready = False
 startTest = False
 
 def welcome():
-    client.send_message("/state", 0)
+    
     global ready
 
     print("Now playing welcome video and music.")
@@ -22,7 +22,7 @@ def welcome():
 
 def Ready():
     global startTest
-
+    client.send_message("/state", 1)
     print("Say ready after the beep...")
 
     text = voice_to_text(duration=5)
@@ -37,7 +37,7 @@ def Ready():
 def run_question(question_number, answer_duration=10):
     print("")
     print(f"---------- QUESTION {question_number} START ----------")
-    client.send_message("/state", question_number)
+    client.send_message("/state", question_number+1)
     # Start real-time streams to TouchDesigner
     start_face_stream(camera_index=1, show=True)
     start_voice_stream()

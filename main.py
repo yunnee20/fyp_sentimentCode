@@ -1,15 +1,21 @@
+from xmlrpc import client
+
 from states import welcome, Ready, run_question
 from score import calculate_total_score
 # from receipt import generate_receipt
 from face import close_face_camera
 from receipt import save_and_print_receipt
+from pythonosc.udp_client import SimpleUDPClient
+
+client = SimpleUDPClient("127.0.0.1", 8001)
 
 NUM_QUESTIONS = 3
 ANSWER_DURATION = 10
 
 
-
 def main():
+    
+    client.send_message("/state", 0)
     question_results = []
 
     # ----------------------------
@@ -65,10 +71,7 @@ def main():
         "anxious": round(avg_anxious, 2),
     }
 
-    save_and_print_receipt(receipt_data)
-
-    # Later:
-    # print_receipt("final_receipt.png")
+    # save_and_print_receipt(receipt_data)
 
     close_face_camera()
 
