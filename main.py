@@ -1,5 +1,5 @@
 from xmlrpc import client
-
+from wsServer import start_ws_server
 from states import welcome, Ready, run_question
 from score import calculate_total_score
 # from receipt import generate_receipt
@@ -14,7 +14,7 @@ ANSWER_DURATION = 10
 
 
 def main():
-    
+    start_ws_server()
     client.send_message("/state", 0)
     question_results = []
 

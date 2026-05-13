@@ -2,6 +2,7 @@ from pathlib import Path
 import threading
 import time
 from pythonosc.udp_client import SimpleUDPClient
+from wsServer import send_ws
 
 MODEL_PATH = Path(__file__).with_name("face_landmarker.task")
 
@@ -209,6 +210,10 @@ def face_loop(camera_index=1, show=True):
             data = {b.category_name: b.score for b in blendshapes}
 
             values = calculate_face_values(data)
+
+            
+
+
             face_value_history.append(values)
             face_scores.append(values["face_score"])
 
