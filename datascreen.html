@@ -1,20 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emotion Test Data Panel</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="screen">
-    <img src="placeholder.png" class="bg" />
-        
-    <div id="valence" class="data">47%</div>
-    <div id="thinking" class="data">20%</div>
-    <canvas id="faceCanvas"></canvas>
-    <canvas id="waveCanvas"></canvas>
-    <div id="transcript"></div>
-</div>
+    <div id="viewport">
+        <div id="stage">
+            <!-- background -->
+            <img src="placeholder.png" id="bg" />
+            
+            <!-- ------first column----- -->
+            <!-- Face values -->
+            <div id="valenceText" class="data-text">0%</div>
+            <div id="thinkingText" class="data-text">0%</div>
+            <div id="arousalText" class="data-text">0%</div>
+            <div id="anxiousText" class="data-text">0%</div>
+            <div id="faceScoreText" class="data-text">0%</div>
+
+            <!-- Bar overlays -->
+            <div id="barValence" class="bar"></div>
+            <div id="barThinking" class="bar"></div>
+            <div id="barArousal" class="bar"></div>
+            <div id="barAnxious" class="bar"></div>
+            <div id="barScore" class="bar"></div>
+            <canvas id="radarCanvas" width="260" height="260"></canvas>
+            <!-- ------end of first column----- -->
+            
+            <!-- Face section -->
+            <canvas id="faceCanvas" width="990" height="610" style="outline-width: 2px white;"></canvas>
+            <div id="eyeL" class="data-text">[eyex, eyeY]</div>
+            <div id="eyeR" class="data-text">[eyex, eyeY]</div>
+            <div id="browL" class="data-text">[eyex, eyeY]</div>
+            <div id="browR" class="data-text">[eyex, eyeY]</div>
+            <div id="mouth" class="data-text">[eyex, eyeY]</div>
+            <div id="jaw" class="data-text">[eyex, eyeY]</div>
+            
+            <!-- Voice section -->
+            <!-- pitch -->
+            <canvas id="waveCanvas" width="300" height="120"></canvas>
+            <div id="pitchText" class="data-text pitch">155hz</div>
+            <div id="averagePitch" class="data-text pitch">155hz</div>
+            <div id="diffPitch" class="data-text pitch">155hz</div>
+            
+
+            <!-- energy -->
+            <div id="energyText" class="data-text">0%</div>
+            <div id="averageEnergy" class="data-text">0%</div>
+            <div id="stability" class="data-text">0%</div>
+            <!-- End of voice section -->
+
+
+            <!-- Text sentiment -->
+            <div id="transcriptText" class="small-text">waiting for transcript...</div>
+            <div id="sentimentLabel" class="data-text">neutral</div>
+            <!-- left -->
+            <div id="joy" class="data-text">0%</div>
+            <div id="neutral" class="data-text">0%</div>
+            <div id="sadness" class="data-text">0%</div>
+            <div id="anger" class="data-text">0%</div>
+            <!-- right -->
+            <div id="fear" class="data-text">0%</div>
+            <div id="disgust" class="data-text">0%</div>   
+            <div id="surprise" class="data-text">0%</div>
+            <div id="score" class="data-text">0%</div>
+
+            
+            <!-- Question -->
+            <div id="questionNum" class="question-num">01</div>
+
+            <!-- Logs -->
+            <div id="logText" class="small-text">system waiting...</div>
+
+        </div>
+  </div>
+
+  <!-- <script src="script.js"></script> -->
 </body>
 </html>

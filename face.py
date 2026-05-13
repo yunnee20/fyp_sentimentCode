@@ -16,13 +16,45 @@ face_running = False
 face_thread = None
 face_scores = []
 
+# FACE_POINTS = {
+#     "brow_left": 65,
+#     "brow_right": 295,
+#     "mouth": 13,
+#     "jaw": 152,
+#     "eye_left": 159,
+#     "eye_right": 386,
+# }
+
 FACE_POINTS = {
-    "brow_left": 65,
-    "brow_right": 295,
-    "mouth": 13,
-    "jaw": 152,
-    "eye_left": 159,
-    "eye_right": 386,
+    # brows
+    "brow_left_inner": 55,
+    "brow_left_mid": 65,
+    "brow_left_outer": 105,
+    "brow_right_inner": 285,
+    "brow_right_mid": 295,
+    "brow_right_outer": 334,
+
+    # eyes
+    "eye_left_top": 159,
+    "eye_left_bottom": 145,
+    "eye_left_outer": 33,
+    "eye_left_inner": 133,
+    "eye_right_top": 386,
+    "eye_right_bottom": 374,
+    "eye_right_inner": 362,
+    "eye_right_outer": 263,
+
+    # mouth
+    "mouth_top": 13,
+    "mouth_bottom": 14,
+    "mouth_left": 61,
+    "mouth_right": 291,
+
+    # face / jaw
+    "chin": 152,
+    "jaw_left": 234,
+    "jaw_right": 454,
+    "nose": 1,
 }
 
 
