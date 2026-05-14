@@ -13,7 +13,15 @@ def analyze_text_sentiment(text):
             "score": 0,
             "positive_score": 0,
             "negative_score": 0,
-            "suboptimal_score": 0
+            "suboptimal_score": 0,
+            "text_score": 0,
+            "joy": 0,
+            "neutral": 0,
+            "sadness": 0,
+            "anger": 0,
+            "fear": 0,
+            "disgust": 0,
+            "surprise": 0
         }
 
     results = text_emotion_model(text)[0]
@@ -52,5 +60,13 @@ def analyze_text_sentiment(text):
         "top_emotion_score": round(top_emotion_score, 3),
         "positive_score": round(positive_score, 3),
         "negative_score": round(negative_score, 3),
-        "suboptimal_score": round(suboptimal_score, 3)
+        "suboptimal_score": round(suboptimal_score, 3),
+        "text_score": round(suboptimal_score, 3),
+        "joy": round(joy * 100, 2),
+        "neutral": round(neutral * 100, 2),
+        "sadness": round(sadness * 100, 2),
+        "anger": round(anger * 100, 2),
+        "fear": round(fear * 100, 2),
+        "disgust": round(disgust * 100, 2),
+        "surprise": round(surprise * 100, 2)
     }

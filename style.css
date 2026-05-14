@@ -80,12 +80,12 @@ body {
 #faceScoreText { left: 305px; top: 260px; }
 
 /* face canvas text */
-#eyeL { left: 24%; top: 590px; }
-#eyeR { left: 30%; top: 590px; }
-#browL { left: 40%; top: 590px; }
-#browR { left: 45%; top: 590px; }
-#mouth { left: 55%; top: 585px; }
-#jaw { left: 64%; top: 585px; }
+#eyeL { left: 480px; top: 590px; }
+#eyeR { left: 580px; top: 590px; }
+#browL { left: 760px; top: 590px; }
+#browR { left: 860px; top: 590px; }
+#mouth { left: 1050px; top: 585px; }
+#jaw { left: 1230px; top: 585px; }
 
 /* pitch text */
 .pitch { text-align: right;}
@@ -149,6 +149,17 @@ body {
 }
 
 /* ---------------CANVAS ---------------*/
+#energyCircle, #averageCircle {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  z-index: 10;
+}
+
+#averageCircle { right: 75px; top: 165px; }
+#energyCircle { right: 75px; top: 40px; }
+
+
 /* canvases */
 #faceCanvas {
   position: absolute;

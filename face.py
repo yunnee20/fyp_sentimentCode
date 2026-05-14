@@ -211,7 +211,29 @@ def face_loop(camera_index=1, show=True):
 
             values = calculate_face_values(data)
 
-            
+        landmark_data = {}
+
+        if result.face_landmarks:
+            landmarks = result.face_landmarks[0]
+
+            for name, idx in FACE_POINTS.items():
+                point = landmarks[idx]
+                landmark_data[name] = {
+                    "x": float(point.x),
+                    "y": float(point.y)
+                }
+
+            send_ws({
+                "type": "face",
+                "values": {
+                    "valence": values["valence"],
+                    "thinking": values["thinking"],
+                    "arousal": values["arousal"],
+                    "anxious": values["anxious"],
+                    "score": values["face_score"]
+                },
+                "positions": landmark_data
+            })
 
 
             face_value_history.append(values)

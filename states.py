@@ -8,6 +8,7 @@ from score import calculate_final_score
 from voicetotext import voice_to_text, check_ready
 from voice_freqpitch import start_voice_stream, stop_voice_stream, get_voice_score
 
+from wsServer import send_ws
 
 ready = False
 startTest = False
@@ -58,6 +59,20 @@ def run_question(question_number, answer_duration=10):
     text_result = analyze_text_sentiment(transcript)
     text_score = text_result["suboptimal_score"]
 
+    send_ws({
+        "type": "text",
+        "transcript": transcript,
+        "label": text_result["label"],
+        "joy": text_result.get("joy", 0),
+        "sadness": text_result.get("sadness", 0),
+        "anger": text_result.get("anger", 0),
+        "fear": text_result.get("fear", 0),
+        "surprise": text_result.get("surprise", 0),
+        "neutral": text_result.get("neutral", 0),
+        "disgust": text_result.get("disgust", 0),
+        "score": text_result["text_score"]
+    })
+
     # Combine scores
     question_score = calculate_final_score(
         face_score=face_score,
@@ -81,6 +96,12 @@ def run_question(question_number, answer_duration=10):
         **text_result,
         **question_score
     }
+
+    send_ws({
+        "type": "state",
+        "question": question_number,
+        "status": "answering"
+    })
 
     print("")
     print("---------- QUESTION RESULT ----------")

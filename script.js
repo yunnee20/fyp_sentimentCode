@@ -98,11 +98,11 @@ function updateText() {
     document.getElementById("browL").textContent = `[${state.pos.brow_left_mid.x.toFixed(2)}, ${state.pos.brow_left_mid.y.toFixed(2)}]`;
     document.getElementById("browR").textContent = `[${state.pos.brow_right_mid.x.toFixed(2)}, ${state.pos.brow_right_mid.y.toFixed(2)}]`;
     document.getElementById("mouth").textContent = `[${state.pos.mouth_top.x.toFixed(2)}, ${state.pos.mouth_top.y.toFixed(2)}]`;
-    document.getElementById("jaw").textContent = `[${state.pos.chin.x.toFixed(2)}, ${state.pos.chin.y.toFixed(2)}`;
+    document.getElementById("jaw").textContent = `[${state.pos.chin.x.toFixed(2)}, ${state.pos.chin.y.toFixed(2)}]`;
 
     // voice section
     document.getElementById("pitchText").textContent = `${state.voice.pitch.toFixed(1)}hz`;
-    document.getElementById("averagePitch").textContent = `${Math.round(state.voice.pitch_average * 100)}%`;
+    document.getElementById("averagePitch").textContent = `${Math.round(state.voice.pitch_average).toFixed(1)}hz`;
     document.getElementById("diffPitch").textContent = `${Math.round(state.voice.pitch_diff * 100)}%`;
 
     document.getElementById("energyText").textContent = `${Math.round(state.voice.energy * 100)}%`;
@@ -195,7 +195,9 @@ function drawWave() {
     const canvas = document.getElementById("waveCanvas");
     const ctx = canvas.getContext("2d");
 
-    wave.push(state.voice.energy);
+    if (state.voice.pitch > 0) {
+        wave.push(state.voice.pitch);
+    }
 
     if (wave.length > 80) {
         wave.shift();
@@ -208,12 +210,38 @@ function drawWave() {
     ctx.beginPath();
 
     wave.forEach((value, i) => {
-        const x = (i / 79) * canvas.width;
-        const y = canvas.height - value * canvas.height;
+        const x = (i / Math.max(1, wave.length - 1)) * canvas.width;
+        const normalized = Math.min(value / 400, 1);
+        const y = canvas.height * (1 - normalized);
 
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
     });
+
+    ctx.stroke();
+}
+
+function drawCircle(canvasId, value) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext("2d");
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const cx = w / 2;
+    const cy = h / 2;
+
+    const radius = 30;
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+
+    ctx.strokeStyle = "#00ffd0";
+
+    // dynamic thickness
+    ctx.lineWidth = 2 + value * 4;
 
     ctx.stroke();
 }
@@ -337,6 +365,8 @@ function updateUI() {
     updateBars();
     drawRadar();
     drawWave();
+    drawCircle("energyCircle", state.voice.energy);
+    drawCircle("averageCircle", state.voice.energy_average);    
     drawFace();
 
     requestAnimationFrame(updateUI);
@@ -345,20 +375,72 @@ function updateUI() {
 updateUI();
 
 /* temporary mock data */
-setInterval(() => {
-    state.face.valence = Math.random() * 100;
-    state.face.thinking = Math.random() * 100;
-    state.face.arousal = Math.random() * 100;
-    state.face.anxious = Math.random() * 100;
-    state.face.score =
-        (state.face.valence +
-        state.face.thinking +
-        state.face.arousal +
-        state.face.anxious) / 4;
+// setInterval(() => {
+//     state.face.valence = Math.random() * 100;
+//     state.face.thinking = Math.random() * 100;
+//     state.face.arousal = Math.random() * 100;
+//     state.face.anxious = Math.random() * 100;
+//     state.face.score =
+//         (state.face.valence +
+//         state.face.thinking +
+//         state.face.arousal +
+//         state.face.anxious) / 4;
 
-    state.voice.energy = Math.random();
-    state.voice.pitch = 80 + Math.random() * 220;
-    state.voice.score = Math.random() * 100;
+//     state.voice.energy = Math.random();
+//     state.voice.pitch = 80 + Math.random() * 220;
+//     state.voice.score = Math.random() * 100;
 
-    state.log = "receiving simulated data...";
-}, 300);
+//     state.log = "receiving simulated data...";
+// }, 300);
+
+const socket = new WebSocket("ws://localhost:8765");
+
+socket.onopen = () => {
+  console.log("Connected to Python WebSocket");
+};
+
+socket.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+
+  if (msg.type === "face") {
+    state.face.valence = msg.values.valence;
+    state.face.thinking = msg.values.thinking;
+    state.face.arousal = msg.values.arousal;
+    state.face.anxious = msg.values.anxious;
+    state.face.score = msg.values.score;
+
+    state.pos = msg.positions;
+  }
+
+  if (msg.type === "voice") {
+    const prevPitch = state.voice.pitch;
+    state.voice.pitch += (msg.pitch - state.voice.pitch) * 0.3;
+    state.voice.pitch_diff = Math.abs(
+        state.voice.pitch - prevPitch
+    ) / 400;
+    state.voice.pitch_average = msg.pitch_average;
+    state.voice.energy = msg.energy;
+    state.voice.energy_average = msg.energy_average;
+    state.voice.energy_stability = 1 - Math.abs(msg.energy - msg.energy_average);
+    state.voice.energy_stability = Math.max(0,Math.min(1, state.voice.energy_stability));
+    state.voice.score = msg.score;
+  }
+
+  if (msg.type === "text") {
+    state.text.transcript = msg.transcript;
+    state.text.label = msg.label;
+    state.text.joy = msg.joy || 0;
+    state.text.neutral = msg.neutral || 0;
+    state.text.sadness = msg.sadness || 0;
+    state.text.anger = msg.anger || 0;
+    state.text.fear = msg.fear || 0;
+    state.text.disgust = msg.disgust || 0;
+    state.text.surprise = msg.surprise || 0;
+    state.text.score = msg.score || 0;
+  }
+
+  if (msg.type === "state") {
+    state.question = msg.question;
+    state.log = msg.status;
+  }
+};
