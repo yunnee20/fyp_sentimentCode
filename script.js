@@ -246,6 +246,86 @@ function drawCircle(canvasId, value) {
     ctx.stroke();
 }
 
+const video = document.getElementById("cameraVideo");
+const canvas = document.getElementById("faceCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = 990;
+canvas.height = 610;
+
+async function startCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: false
+  });
+  video.srcObject = stream;
+}
+
+function drawCameraOutline() {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const src = img.data;
+  const output = ctx.createImageData(canvas.width, canvas.height);
+  const dst = output.data;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  function grayAt(x, y) {
+    const i = (y * w + x) * 4;
+    return (src[i] + src[i + 1] + src[i + 2]) / 3;
+  }
+
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const gx =
+        -grayAt(x - 1, y - 1) + grayAt(x + 1, y - 1) +
+        -2 * grayAt(x - 1, y) + 2 * grayAt(x + 1, y) +
+        -grayAt(x - 1, y + 1) + grayAt(x + 1, y + 1);
+
+      const gy =
+        -grayAt(x - 1, y - 1) - 2 * grayAt(x, y - 1) - grayAt(x + 1, y - 1) +
+         grayAt(x - 1, y + 1) + 2 * grayAt(x, y + 1) + grayAt(x + 1, y + 1);
+
+      const edge = Math.sqrt(gx * gx + gy * gy);
+
+      const i = (y * w + x) * 4;
+
+      if (edge > 40) {
+        dst[i] = 0;
+        dst[i + 1] = 255;
+        dst[i + 2] = 120;
+        dst[i + 3] = 255;
+      } else {
+        dst[i] = 0;
+        dst[i + 1] = 0;
+        dst[i + 2] = 0;
+        dst[i + 3] = 255;    
+      }
+    }
+  }
+
+  ctx.putImageData(output, 0, 0);
+
+  // draw face landmarks AFTER this
+//   drawFace();
+
+  requestAnimationFrame(drawCameraOutline);
+}
+
+
+
+startCamera().then(() => {
+  video.onloadedmetadata = () => {
+    drawCameraOutline();
+    
+  };
+  
+});
+
+
+
 function drawFace() {
     const canvas = document.getElementById("faceCanvas");
     const ctx = canvas.getContext("2d");
@@ -366,12 +446,13 @@ function updateUI() {
     drawRadar();
     drawWave();
     drawCircle("energyCircle", state.voice.energy);
-    drawCircle("averageCircle", state.voice.energy_average);    
+    drawCircle("averageCircle", state.voice.energy_average); 
+
     drawFace();
 
     requestAnimationFrame(updateUI);
 }
-
+startCamera();   
 updateUI();
 
 /* temporary mock data */

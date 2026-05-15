@@ -30,7 +30,11 @@
             <!-- ------end of first column----- -->
             
             <!-- Face section -->
-            <canvas id="faceCanvas" width="990" height="610" style="outline-width: 2px white;"></canvas>
+             <div class="face-wrapper">
+                <video id="cameraVideo" autoplay playsinline muted></video>
+                <canvas id="faceCanvas"></canvas>
+            </div>
+            <!-- <canvas id="faceCanvas" width="990" height="610" style="outline-width: 2px white;"></canvas> -->
             <div id="eyeL" class="data-text">[eyex, eyeY]</div>
             <div id="eyeR" class="data-text">[eyex, eyeY]</div>
             <div id="browL" class="data-text">[eyex, eyeY]</div>
