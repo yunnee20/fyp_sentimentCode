@@ -52,7 +52,7 @@ def analyze_text_sentiment(text):
     top_emotion = max(emotion_scores, key=emotion_scores.get)
     top_emotion_score = emotion_scores[top_emotion]
     suboptimal_score = negative_score / (positive_score + negative_score)*top_emotion_score
-
+    
     
 
     return {
