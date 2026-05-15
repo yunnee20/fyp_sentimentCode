@@ -7,9 +7,9 @@ from wsServer import send_ws
 from pythonosc.udp_client import SimpleUDPClient
 from audioTrigger import play_audio
 from face import start_face_stream, stop_face_stream, get_average_face_values
-from voice_freqpitch import start_voice_stream, stop_voice_stream, get_voice_score
+from voice_freqpitch import start_voice_stream, stop_voice_stream, get_voice_score, start_justification_recording, stop_justification_recording
 
-td_client = SimpleUDPClient("127.0.0.1", 8000)
+td_client = SimpleUDPClient("127.0.0.1", 8001)
 
 SCENES = [1, 2, 3, 4, 5, 6]
 SCENE_DURATIONS = {
@@ -100,16 +100,22 @@ def run_scene_flow():
 
         choice, selected_text, text_result = choose_response(scene_id)
 
-        # stop live analysis after choice for now
+        if choice is None:
+            stop_face_stream()
+            stop_voice_stream()
+            break
+
+        justification_text, should_end = handle_justification()
+
         stop_face_stream()
         stop_voice_stream()
+
+        if should_end:
+            break
 
         face_values = get_average_face_values()
         face_score = face_values["face_score"]
         voice_score = get_voice_score()
-
-        if choice is None:
-            break
 
         # later play response received audio here
         play_audio("audio/response.mp3", wait=True)
@@ -117,6 +123,7 @@ def run_scene_flow():
             "scene": scene_id,
             "choice": choice,
             "selected_text": selected_text,
+            "justification_text": justification_text,
 
             "valence": round(face_values["valence"], 2),
             "thinking": round(face_values["thinking"], 2),
@@ -148,3 +155,36 @@ def run_scene_flow():
 def send_video(index):
     td_client.send_message("/td/video_index", int(index))
     td_client.send_message("/td/video_pulse", 1)
+
+def handle_justification():
+    print("Hold SPACE to speak justification.")
+    print("Release SPACE to stop.")
+    print("Press TAB to skip.")
+    print("Press ESC to end.")
+
+    while True:
+        event = keyboard.read_event()
+
+        if event.event_type == keyboard.KEY_DOWN:
+            key = event.name.lower()
+
+            if key == "tab":
+                print("Justification skipped.")
+                return "", False
+
+            if key == "esc":
+                print("Ending requested.")
+                return "", True
+
+            if key == "space":
+                start_justification_recording()
+
+                while True:
+                    release_event = keyboard.read_event()
+
+                    if (
+                        release_event.event_type == keyboard.KEY_UP
+                        and release_event.name.lower() == "space"
+                    ):
+                        justification_text = stop_justification_recording()
+                        return justification_text, False

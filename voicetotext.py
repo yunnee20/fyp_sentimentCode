@@ -38,3 +38,13 @@ def check_ready():
     else:
         print("User said:", transcribed_text)
         return False 
+    
+def transcribe_audio_file(filename):
+    segments, info = model.transcribe(filename)
+
+    text = ""
+
+    for segment in segments:
+        text += segment.text.strip() + " "
+
+    return text.lower().strip()
