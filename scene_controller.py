@@ -6,6 +6,8 @@ from textsentiment import analyze_text_sentiment
 from wsServer import send_ws
 from pythonosc.udp_client import SimpleUDPClient
 from audioTrigger import play_audio
+from face import start_face_stream, stop_face_stream, get_average_face_values
+from voice_freqpitch import start_voice_stream, stop_voice_stream, get_voice_score
 
 td_client = SimpleUDPClient("127.0.0.1", 8000)
 
@@ -92,7 +94,19 @@ def run_scene_flow():
         # temporary wait while scene video plays
         time.sleep(3)
 
+        # start live analysis during answer phase
+        start_face_stream(camera_index=1, show=False)
+        start_voice_stream()
+
         choice, selected_text, text_result = choose_response(scene_id)
+
+        # stop live analysis after choice for now
+        stop_face_stream()
+        stop_voice_stream()
+
+        face_values = get_average_face_values()
+        face_score = face_values["face_score"]
+        voice_score = get_voice_score()
 
         if choice is None:
             break
@@ -103,6 +117,15 @@ def run_scene_flow():
             "scene": scene_id,
             "choice": choice,
             "selected_text": selected_text,
+
+            "valence": round(face_values["valence"], 2),
+            "thinking": round(face_values["thinking"], 2),
+            "arousal": round(face_values["arousal"], 2),
+            "anxious": round(face_values["anxious"], 2),
+
+            "face_score": round(face_score, 2),
+            "voice_score": round(voice_score, 2),
+
             "text_score": text_result["text_score"],
             "text_label": text_result["label"],
             "text_result": text_result
