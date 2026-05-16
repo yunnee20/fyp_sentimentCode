@@ -65,3 +65,11 @@ def start_ws_server():
 
     thread = threading.Thread(target=run, daemon=True)
     thread.start()
+
+def send_log(*args):
+    message = " | ".join(str(x) for x in args)
+
+    send_ws({
+        "type": "log",
+        "message": message
+    })

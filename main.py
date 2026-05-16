@@ -1,61 +1,45 @@
-
-from wsServer import start_ws_server
-from states import welcome, Ready, run_question
+import time
+from wsServer import start_ws_server, send_ws
+from sceneControl import run_scene_flow
 from score import calculate_total_score
-# from receipt import generate_receipt
-from face import close_face_camera
 from receipt import save_and_print_receipt
-from pythonosc.udp_client import SimpleUDPClient
-
-client = SimpleUDPClient("127.0.0.1", 8001)
-
-NUM_QUESTIONS = 3
-ANSWER_DURATION = 10
-
+from face import close_face_camera
 
 def main():
+    # start JS websocket server
     start_ws_server()
-    client.send_message("/state", 0)
-    question_results = []
 
-    # ----------------------------
-    # WELCOME STATE
-    # ----------------------------
-    welcome()
+    # give browser time to connect
+    time.sleep(5)
 
-    is_ready = Ready()
+    send_ws({
+        "type": "state",
+        "status": "system_started"
+    })
 
-    if not is_ready:
-        print("User is not ready. Ending experience.")
-        return Ready()  # Optionally, you could loop back to welcome or exit the program here.
+    # run scenes
+    results = run_scene_flow()
 
-    # ----------------------------
-    # QUESTION STATES
-    # ----------------------------
-    for question_number in range(1, NUM_QUESTIONS + 1):
-        result = run_question(
-            question_number=question_number,
-            answer_duration=ANSWER_DURATION
-        )
+    print("")
+    print("========== ALL RESULTS ==========")
+    print(results)
 
-        question_results.append(result)
+    if not results:
+        print("No results collected.")
+        return
 
-    # ----------------------------
-    # FINAL SCORE
-    # ----------------------------
-    total_result = calculate_total_score(question_results)
+    # final score
+    total_result = calculate_total_score(results)
 
     print("")
     print("========== FINAL RESULT ==========")
     print(total_result)
 
-    # ----------------------------
-    # RECEIPT
-    # ----------------------------
-    avg_valence = sum(q["valence"] for q in question_results) / len(question_results)
-    avg_thinking = sum(q["thinking"] for q in question_results) / len(question_results)
-    avg_arousal = sum(q["arousal"] for q in question_results) / len(question_results)
-    avg_anxious = sum(q["anxious"] for q in question_results) / len(question_results)
+    # average face values
+    avg_valence = sum(q.get("valence", 0) for q in results) / len(results)
+    avg_thinking = sum(q.get("thinking", 0) for q in results) / len(results)
+    avg_arousal = sum(q.get("arousal", 0) for q in results) / len(results)
+    avg_anxious = sum(q.get("anxious", 0) for q in results) / len(results)
 
     receipt_data = {
         "score": total_result["final_score"],
@@ -71,6 +55,13 @@ def main():
         "anxious": round(avg_anxious, 2),
     }
 
+    send_ws({
+        "type": "final",
+        "result": total_result,
+        "receipt": receipt_data
+    })
+
+    # uncomment when ready
     # save_and_print_receipt(receipt_data)
 
     close_face_camera()

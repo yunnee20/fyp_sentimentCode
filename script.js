@@ -61,7 +61,7 @@ let state = {
         surprise: 0,
         score: 0
     },
-    question: 1,
+    question: 5,
     log: "system waiting..."
 };
 
@@ -122,7 +122,7 @@ function updateText() {
     document.getElementById("score").textContent = `${Math.round(state.text.score)}%`;
     
     document.getElementById("questionNum").textContent = String(state.question).padStart(2, "0");
-    document.getElementById("logText").textContent = state.log;
+    // document.getElementById("logText").textContent = state.log;
 }
 
 function updateBars() {
@@ -295,7 +295,7 @@ function drawCameraOutline() {
       if (edge > 40) {
         dst[i] = 0;
         dst[i + 1] = 255;
-        dst[i + 2] = 120;
+        dst[i + 2] = 195;
         dst[i + 3] = 255;
       } else {
         dst[i] = 0;
@@ -311,149 +311,155 @@ function drawCameraOutline() {
   // draw face landmarks AFTER this
 //   drawFace();
 
-  requestAnimationFrame(drawCameraOutline);
+  // requestAnimationFrame(drawCameraOutline);
 }
 
 
 
-startCamera().then(() => {
-  video.onloadedmetadata = () => {
-    drawCameraOutline();
+// startCamera().then(() => {
+//   video.onloadedmetadata = () => {
+//     drawCameraOutline();
     
-  };
+//   };
   
-});
-
+// });
 
 
 function drawFace() {
-    const canvas = document.getElementById("faceCanvas");
-    const ctx = canvas.getContext("2d");
+  const canvas = document.getElementById("faceCanvas");
+  const ctx = canvas.getContext("2d");
 
-    const w = canvas.width;
-    const h = canvas.height;
+  const w = canvas.width;
+  const h = canvas.height;
 
-    ctx.clearRect(0, 0, w, h);
+  // ctx.clearRect(0, 0, w, h);
 
-    function hasPoint(name) {
-        return state.pos[name] !== undefined;
-    }
+  function hasPoint(name) {
+      return state.pos[name] !== undefined;
+  }
 
-    function p(name) {
-        return {
-        x: state.pos[name].x * w,
-        y: state.pos[name].y * h
-        };
-    }
+  function p(name) {
+      return {
+      x: state.pos[name].x * w,
+      y: state.pos[name].y * h
+      };
+  }
 
-    function line(a, b) {
-        if (!hasPoint(a) || !hasPoint(b)) return;
+  function line(a, b) {
+      if (!hasPoint(a) || !hasPoint(b)) return;
 
-        const pa = p(a);
-        const pb = p(b);
+      const pa = p(a);
+      const pb = p(b);
 
-        ctx.beginPath();
-        ctx.moveTo(pa.x, pa.y);
-        ctx.lineTo(pb.x, pb.y);
-        ctx.stroke();
-    }
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+  }
 
-    function rectBlob(name, value, label) {
-        if (!hasPoint(name)) return;
+  function rectBlob(name, value, label) {
+      if (!hasPoint(name)) return;
 
-        const point = p(name);
+      const point = p(name);
 
-        const size = 30 + value * 0.8;
+      const size = 30 + value * 0.8;
 
-        ctx.strokeStyle = "#00ffd0";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(
-        point.x - size / 2,
-        point.y - size / 2,
-        size,
-        size
-        );
+      ctx.strokeStyle = "#00ffd0";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+      point.x - size / 2,
+      point.y - size / 2,
+      size,
+      size
+      );
 
-        ctx.font = "12px JetBrainsMono, monospace";
-        ctx.fillStyle = "#00ffd0";
-        ctx.fillText(label, point.x + size / 2 + 6, point.y);
-    }
+      ctx.font = "12px JetBrainsMono, monospace";
+      ctx.fillStyle = "#00ffd0";
+      ctx.fillText(label, point.x + size / 2 + 6, point.y);
+  }
 
-    // --------------------
-    // FACE GRID
-    // --------------------
-    ctx.strokeStyle = "rgba(0,255,208,0.65)";
-    ctx.lineWidth = 2;
+  // --------------------
+  // FACE GRID
+  // --------------------
+  ctx.strokeStyle = "rgba(0,255,208,0.65)";
+  ctx.lineWidth = 2;
 
-    // brows
-    line("brow_left_outer", "brow_left_mid");
-    line("brow_left_mid", "brow_left_inner");
-    line("brow_right_inner", "brow_right_mid");
-    line("brow_right_mid", "brow_right_outer");
+  // brows
+  line("brow_left_outer", "brow_left_mid");
+  line("brow_left_mid", "brow_left_inner");
+  line("brow_right_inner", "brow_right_mid");
+  line("brow_right_mid", "brow_right_outer");
 
-    // eyes
-    line("eye_left_outer", "eye_left_top");
-    line("eye_left_top", "eye_left_inner");
-    line("eye_left_inner", "eye_left_bottom");
-    line("eye_left_bottom", "eye_left_outer");
+  // eyes
+  line("eye_left_outer", "eye_left_top");
+  line("eye_left_top", "eye_left_inner");
+  line("eye_left_inner", "eye_left_bottom");
+  line("eye_left_bottom", "eye_left_outer");
 
-    line("eye_right_inner", "eye_right_top");
-    line("eye_right_top", "eye_right_outer");
-    line("eye_right_outer", "eye_right_bottom");
-    line("eye_right_bottom", "eye_right_inner");
+  line("eye_right_inner", "eye_right_top");
+  line("eye_right_top", "eye_right_outer");
+  line("eye_right_outer", "eye_right_bottom");
+  line("eye_right_bottom", "eye_right_inner");
 
-    // mouth
-    line("mouth_left", "mouth_top");
-    line("mouth_top", "mouth_right");
-    line("mouth_right", "mouth_bottom");
-    line("mouth_bottom", "mouth_left");
+  // mouth
+  line("mouth_left", "mouth_top");
+  line("mouth_top", "mouth_right");
+  line("mouth_right", "mouth_bottom");
+  line("mouth_bottom", "mouth_left");
 
-    // face structure
-    line("jaw_left", "chin");
-    line("chin", "jaw_right");
-    line("nose", "mouth_top");
-    line("nose", "eye_left_inner");
-    line("nose", "eye_right_inner");
-    line("brow_left_inner", "nose");
-    line("brow_right_inner", "nose");
+  // face structure
+  line("jaw_left", "chin");
+  line("chin", "jaw_right");
+  line("nose", "mouth_top");
+  line("nose", "eye_left_inner");
+  line("nose", "eye_right_inner");
+  line("brow_left_inner", "nose");
+  line("brow_right_inner", "nose");
 
-    // --------------------
-    // POINTS
-    // --------------------
-    Object.keys(state.pos).forEach((name) => {
-        const point = p(name);
+  // --------------------
+  // POINTS
+  // --------------------
+  Object.keys(state.pos).forEach((name) => {
+      const point = p(name);
 
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "#00ffd0";
-        ctx.fill();
-    });
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#00ffd0";
+      ctx.fill();
+  });
 
-    // --------------------
-    // RECTANGLE BLOBS
-    // --------------------
-    rectBlob("brow_left_mid", state.face.thinking, "brow");
-    rectBlob("brow_right_mid", state.face.thinking, "brow");
-    rectBlob("mouth_top", state.face.valence, "mouth");
-    rectBlob("chin", state.face.arousal, "jaw");
-    rectBlob("eye_left_top", state.face.anxious, "eye");
-    rectBlob("eye_right_top", state.face.anxious, "eye");
+  // --------------------
+  // RECTANGLE BLOBS
+  // --------------------
+  rectBlob("brow_left_mid", state.face.thinking, "brow");
+  rectBlob("brow_right_mid", state.face.thinking, "brow");
+  rectBlob("mouth_top", state.face.valence, "mouth");
+  rectBlob("chin", state.face.arousal, "jaw");
+  rectBlob("eye_left_top", state.face.anxious, "eye");
+  rectBlob("eye_right_top", state.face.anxious, "eye");
 }
 
 function updateUI() {
-    updateText();
-    updateBars();
-    drawRadar();
-    drawWave();
-    drawCircle("energyCircle", state.voice.energy);
-    drawCircle("averageCircle", state.voice.energy_average); 
+  // startCamera();
+  // drawFace();
+  drawCameraOutline(); // background camera trace
+  drawFace();  
+  // drawFacePanel();
+  updateText();
+  updateBars();
+  drawRadar();
+  drawWave();
+  drawCircle("energyCircle", state.voice.energy);
+  drawCircle("averageCircle", state.voice.energy_average); 
 
-    drawFace();
-
-    requestAnimationFrame(updateUI);
+  requestAnimationFrame(updateUI);
 }
-startCamera();   
-updateUI();
+// startCamera();   
+startCamera().then(() => {
+  video.onloadedmetadata = () => {
+    updateUI();
+  };
+});
 
 /* temporary mock data */
 // setInterval(() => {
@@ -521,7 +527,31 @@ socket.onmessage = (event) => {
   }
 
   if (msg.type === "state") {
-    state.question = msg.question;
-    state.log = msg.status;
+    if (msg.question !== undefined) {
+      state.question = msg.question;
+    }
   }
-};
+  if (msg.type === "log") {
+    addTerminalLine(msg.message);
+  }
+}
+
+
+
+function addTerminalLine(text) {
+    const terminal = document.getElementById("terminal");
+
+    const line = document.createElement("div");
+    line.className = "terminal-line";
+
+    const timestamp = new Date().toLocaleTimeString();
+
+    line.textContent = `[${timestamp}] ${text}`;
+
+    terminal.prepend(line);
+
+    // limit lines
+    while (terminal.children.length > 8) {
+        terminal.removeChild(terminal.lastChild);
+    }
+}

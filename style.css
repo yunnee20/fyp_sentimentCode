@@ -66,18 +66,18 @@ body {
 }
 
 /* left bars */
-#barValence  { left: 170px; top: 123px; width: 120px; }
-#barThinking { left: 170px; top: 158px; width: 120px; }
-#barArousal  { left: 170px; top: 193px; width: 120px; }
-#barAnxious  { left: 170px; top: 228px; width: 120px; }
-#barScore    { left: 170px; top: 263px; width: 120px; }
+#barValence  { left: 170px; top: 120px; width: 120px; }
+#barThinking { left: 170px; top: 154px; width: 120px; }
+#barArousal  { left: 170px; top: 185px; width: 120px; }
+#barAnxious  { left: 170px; top: 218px; width: 120px; }
+#barScore    { left: 170px; top: 250px; width: 120px; }
 
 /* text values beside bars */
 #valenceText   { left: 305px; top: 120px; }
-#thinkingText  { left: 305px; top: 155px; }
-#arousalText   { left: 305px; top: 190px; }
-#anxiousText   { left: 305px; top: 225px; }
-#faceScoreText { left: 305px; top: 260px; }
+#thinkingText  { left: 305px; top: 154px; }
+#arousalText   { left: 305px; top: 185px; }
+#anxiousText   { left: 305px; top: 218px; }
+#faceScoreText { left: 305px; top: 250px; }
 
 /* face canvas text */
 #eyeL { left: 480px; top: 590px; }
@@ -92,19 +92,22 @@ body {
 /* #pitchText { right: 14.5%; top: 25%; } */
 #pitchText { left: 1610px; top: 280px; }
 #averagePitch { left: 1610px; top: 305px; }
-#diffPitch { left: 1610px; top: 326px; }
+#diffPitch { left: 1630px; top: 326px; }
 
 /* energy text */
-#energyText { left: 1780px; top: 95px; }
-#averageEnergy { left: 1780px; top: 220px; }
-#stability { left: 1780px; top: 310px; font-size: 1.2em; text-align: center;}
+#energyText { left: 1777px; top: 95px; }
+#averageEnergy { left: 1777px; top: 220px; }
+#stability { left: 1775px; top: 310px; font-size: 1.2em; text-align: center;}
 
 /* text sentiment */
 #transcriptText {
-  left: 1435px;
-  top: 465px;
-  width: 330px;
-  height: 80px;
+  left: 1400px;
+  top: 450px;
+  /* background-color: #00ffd0; */
+  width: 250px;
+  height: 90px;
+  text-wrap: wrap;
+  padding-top: 10px;
 }
 #sentimentLabel {
   left: 1725px;
@@ -131,8 +134,8 @@ body {
 /* question counter */
 .question-num {
   position: absolute;
-  left: 1310px;
-  top: 825px;
+  left: 1328px;
+  top: 833px;
   width: 90px;
   text-align: center;
   color: #00ffd0;
@@ -141,11 +144,19 @@ body {
 }
 
 /* terminal/log area */
-#logText {
+#terminal {
   left: 675px;
   top: 760px;
-  width: 520px;
-  height: 220px;
+  width: 480px;
+  height: 240px;
+  /* background: rgba(100,0,0,1); */
+  padding: 20px;
+  overflow: hidden;
+  font-size: 10px;
+}
+.terminal-line {
+    opacity: 0.9;
+    white-space: wrap;
 }
 
 /* ---------------CANVAS ---------------*/

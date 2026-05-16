@@ -2,7 +2,8 @@ from pathlib import Path
 import threading
 import time
 from pythonosc.udp_client import SimpleUDPClient
-from wsServer import send_ws
+from wsServer import send_ws, send_log
+# from sceneControl import send_log
 
 MODEL_PATH = Path(__file__).with_name("face_landmarker.task")
 
@@ -242,7 +243,7 @@ def face_loop(camera_index=1, show=True):
             send_landmarks_to_td(result)
             send_face_values_to_td(values)
 
-            print(
+            send_log(
                 "face:",
                 round(values["face_score"], 2),
                 "valence:",
@@ -336,3 +337,4 @@ def get_average_face_values():
         "anxious": sum(v["anxious"] for v in face_value_history) / len(face_value_history),
         "face_score": sum(v["face_score"] for v in face_value_history) / len(face_value_history),
     }
+
