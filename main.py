@@ -4,6 +4,9 @@ from sceneControl import run_scene_flow
 from score import calculate_total_score
 from receipt import save_and_print_receipt
 from face import close_face_camera
+from pythonosc.udp_client import SimpleUDPClient
+
+td_client = SimpleUDPClient("127.0.0.1", 8002) #Ending result 
 
 def main():
     # start JS websocket server
@@ -34,6 +37,7 @@ def main():
     print("")
     print("========== FINAL RESULT ==========")
     print(total_result)
+    # td_client.send_message(total_result)
 
     # average face values
     avg_valence = sum(q.get("valence", 0) for q in results) / len(results)
@@ -46,7 +50,7 @@ def main():
         "face": total_result["face_score"],
         "voice": total_result["voice_score"],
         "text": total_result["text_score"],
-        "label": total_result["label"],
+        "label": total_result["label"].replace('"', '').upper(),
         "authenticity": total_result["authenticity"],
 
         "valence": round(avg_valence, 2),
@@ -55,11 +59,15 @@ def main():
         "anxious": round(avg_anxious, 2),
     }
 
-    send_ws({
-        "type": "final",
-        "result": total_result,
-        "receipt": receipt_data
-    })
+    for key, value in receipt_data.items():
+        td_client.send_message(f"/receipt/{key}", value)
+        
+
+    # send_ws({
+    #     "type": "final",
+    #     "result": total_result,
+    #     "receipt": receipt_data
+    # })
 
     # uncomment when ready
     # save_and_print_receipt(receipt_data)

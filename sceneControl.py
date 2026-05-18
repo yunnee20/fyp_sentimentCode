@@ -25,7 +25,8 @@ from voice_freqpitch import (
 # --------------------
 # TD OSC
 # --------------------
-td_client = SimpleUDPClient("127.0.0.1", 8000)
+td_client = SimpleUDPClient("127.0.0.1", 8001)
+sceneResult = SimpleUDPClient("127.0.0.1", 8003)
 
 # --------------------
 # SCENE SETTINGS
@@ -81,9 +82,9 @@ def choose_response(scene_id):
     text_result = analyze_text_sentiment(selected_text)
     text_score = text_result["text_score"]
 
-    send_log("Choice:", choice)
-    send_log("Selected text:", selected_text)
-    send_log("Text sentiment:", text_result)
+    send_log(f"Choice: {choice}")
+    send_log(f"Selected text: {selected_text}")
+    send_log(f"Text sentiment: {text_result}")
 
     send_ws({
         "type": "choice",
@@ -287,9 +288,15 @@ def run_scene_flow():
 
         # log_terminal(result)
 
+        for key, value in result.items():
+        # skip nested dictionary for now
+            if isinstance(value, dict):
+                continue
+            sceneResult.send_message(f"/scene/{key}", value)
+
         results.append(result)
 
-        send_log("Saved result:", result)
+        send_log(f"Saved result: {result}")
 
         send_ws({
             "type": "scene_result",
@@ -299,6 +306,7 @@ def run_scene_flow():
         if should_end:
             break
 
+        send_video(8)
         send_log("Press ENTER for next scene, ESC to end.")
 
         send_ws({
