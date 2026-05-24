@@ -1,22 +1,0 @@
-Adobe After Effects v26.2.1 Windows 64 render log for project “scenario.aep”
-
-Rendering started on 5/8/2026 at 5:58:23 PM
-
-  5/8/2026 5:58:23 PM: Starting composition “ques1”.
-
-  Output To: C:\Users\Yun Nee\OneDrive\Desktop\UK\UAL\Year3\FYP_term2\fyp_sentimentCode\video\testingVideo\ques1.mp4    5/8/2026 5:58:28 PM: Finished composition “ques1”.
-
-
-  5/8/2026 5:58:28 PM: Starting composition “ques2”.
-
-  Output To: C:\Users\Yun Nee\OneDrive\Desktop\UK\UAL\Year3\FYP_term2\fyp_sentimentCode\video\testingVideo\ques2.mp4    5/8/2026 5:58:34 PM: Finished composition “ques2”.
-
-
-  5/8/2026 5:58:34 PM: Starting composition “ques3”.
-
-  Output To: C:\Users\Yun Nee\OneDrive\Desktop\UK\UAL\Year3\FYP_term2\fyp_sentimentCode\video\testingVideo\ques3.mp4    5/8/2026 5:58:40 PM: Finished composition “ques3”.
-
-
-  Total Time Elapsed: 16 Seconds
-Log closed on 5/8/2026 at 5:58:40 PM
-
