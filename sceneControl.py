@@ -2,6 +2,7 @@ import random
 import time
 import keyboard
 from pythonosc.udp_client import SimpleUDPClient
+
 from audioTrigger import play_audio
 from sceneOptions import OPTIONS
 from textsentiment import analyze_text_sentiment
@@ -35,9 +36,18 @@ SCENES = [1, 2, 3, 4, 5, 6]
 
 VIDEO_WELCOME = 0
 VIDEO_ENDING = 7
+VIDEO_SCENE_RESULT = 8
+VIDEO_JUSTIFY = 9
 
-# temporary testing duration
 SCENE_WAIT_SECONDS = 3
+
+# --------------------
+# AUDIO
+# --------------------
+LET_BEGIN = "audio/perfect.mp3"
+NEXT_SCENE = "audio/next.mp3"
+SCENE_RESULT = "audio/result.mp3"
+RESPONSE_RECORDED = "audio/response.mp3"
 
 
 def send_video(index):
@@ -80,7 +90,6 @@ def choose_response(scene_id):
     selected_text = OPTIONS[scene_id][choice]
 
     text_result = analyze_text_sentiment(selected_text)
-    text_score = text_result["text_score"]
 
     send_log(f"Choice: {choice}")
     send_log(f"Selected text: {selected_text}")
@@ -111,7 +120,9 @@ def choose_response(scene_id):
 
 
 def handle_justification():
-    send_log("Hold SPACE to speak justification.")
+    send_video(VIDEO_JUSTIFY)
+
+    send_log("Hold SPACE to add spoken justification.")
     send_log("Release SPACE to stop.")
     send_log("Press TAB to skip.")
     send_log("Press ESC to end.")
@@ -172,18 +183,22 @@ def handle_justification():
                         return justification_text, False
 
 
-
 def run_scene_flow():
-    
     remaining_scenes = SCENES.copy()
     results = []
     question = 0
+
     # --------------------
     # WELCOME
     # --------------------
     send_video(VIDEO_WELCOME)
 
     send_log("Press ENTER when audience is ready.")
+    send_log("Keyboard controls:")
+    send_log("A/B/C/D = choose response")
+    send_log("Hold SPACE = speak justification")
+    send_log("TAB = skip speaking")
+    send_log("ESC = end anytime")
 
     send_ws({
         "type": "state",
@@ -197,8 +212,7 @@ def run_scene_flow():
         "status": "ready_pressed"
     })
 
-    # optional: play Python overlay audio here later
-    play_audio("audio/perfect.mp3")
+    play_audio(LET_BEGIN)
 
     # --------------------
     # SCENES
@@ -209,9 +223,11 @@ def run_scene_flow():
 
         print("")
         print("---------- SCENE", scene_id, "----------")
-        
+
         question += 1
+
         send_log(f"QUESTION: {question}")
+
         send_ws({
             "type": "state",
             "status": "question_started",
@@ -221,7 +237,6 @@ def run_scene_flow():
 
         send_video(scene_id)
 
-        # temporary wait for video
         time.sleep(SCENE_WAIT_SECONDS)
 
         # --------------------
@@ -242,16 +257,14 @@ def run_scene_flow():
             if choice is None:
                 should_end = True
             else:
-                # optional: play Python overlay audio here later
-                play_audio("audio/response.mp3")
-
+                play_audio(RESPONSE_RECORDED)
                 justification_text, should_end = handle_justification()
 
         finally:
             stop_face_stream()
             stop_voice_stream()
 
-        if choice is None:
+        if choice is None or should_end:
             break
 
         # --------------------
@@ -266,6 +279,7 @@ def run_scene_flow():
 
         result = {
             "scene": scene_id,
+            "question": question,
             "choice": choice,
             "selected_text": selected_text,
             "justification_text": justification_text,
@@ -286,10 +300,7 @@ def run_scene_flow():
             "text_result": text_result
         }
 
-        # log_terminal(result)
-
         for key, value in result.items():
-        # skip nested dictionary for now
             if isinstance(value, dict):
                 continue
             sceneResult.send_message(f"/scene/{key}", value)
@@ -303,21 +314,27 @@ def run_scene_flow():
             "result": result
         })
 
-        if should_end:
-            break
+        # --------------------
+        # SCENE RESULT PAGE
+        # --------------------
+        send_video(VIDEO_SCENE_RESULT)
+        play_audio(SCENE_RESULT)
 
-        send_video(8)
-        send_log("Press ENTER for next scene, ESC to end.")
+        send_log("This is your result for the previous scene.")
+        send_log("Press ENTER when ready for the next scenario, or ESC to end.")
 
         send_ws({
             "type": "state",
-            "status": "waiting_next_scene"
+            "status": "scene_result",
+            "result": result
         })
 
         next_key = wait_for_key(["enter", "esc"])
 
         if next_key == "esc":
             break
+
+        play_audio(NEXT_SCENE)
 
     # --------------------
     # ENDING
@@ -331,10 +348,13 @@ def run_scene_flow():
     })
 
     send_log("Experience ended.")
+
     return results
+
 
 def send_log(message):
     print(message)
+
     send_ws({
         "type": "log",
         "message": str(message)

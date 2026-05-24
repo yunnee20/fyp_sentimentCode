@@ -13,7 +13,7 @@ def main():
     start_ws_server()
 
     # give browser time to connect
-    time.sleep(5)
+    time.sleep(1)
 
     send_ws({
         "type": "state",
