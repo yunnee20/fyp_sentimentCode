@@ -68,23 +68,24 @@ Python functions as the central controller for the installation.
 
 Responsibilities include:
 ```text
-- scene flow management
-- keyboard interaction handling
-- face tracking
-- voice processing
-- speech transcription
-- text sentiment analysis
-- WebSocket communication
-- OSC communication
-- score calculation
-- receipt printing
+scene flow management
+keyboard interaction handling
+face tracking
+voice processing
+speech transcription
+text sentiment analysis
+WebSocket communication
+OSC communication
+score calculation
+receipt printing
 ```
 
 ## Face Analysis
 <b>Libraries</b>
 - MediaPipe
 - OpenCV
-- Features
+
+<b>Features</b>
 - facial landmark tracking
 - face mesh rendering
 - blendshape analysis
@@ -95,9 +96,9 @@ The system derives speculative emotional dimensions from facial movement:
 <b>valence, arousal, thinking, anxiousness</b>
 
 Example Logic
-$$ 
+```python
 valence = smileLeft + smileRight - frownLeft - frownRight
-$$
+```
 
 Landmark coordinates are streamed in real-time to the dashboard for visual overlays and reactive graphics.
 
