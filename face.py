@@ -1,14 +1,18 @@
+# Face tracking and emotion analysis using MediaPipe Face Landmarker
+# Provides real-time facial emotion detection and landmark tracking
+# Sends data to TouchDesigner via OSC and to frontend via WebSocket
+
 from pathlib import Path
 import threading
 import time
 from pythonosc.udp_client import SimpleUDPClient
 from wsServer import send_ws, send_log
-# from sceneControl import send_log
 
 MODEL_PATH = Path(__file__).with_name("face_landmarker.task")
 
 client = SimpleUDPClient("127.0.0.1", 8000)
 
+# Global state for face detection components (lazy-loaded for performance)
 landmarker = None
 cap = None
 cv2 = None
@@ -17,16 +21,10 @@ mp = None
 face_running = False
 face_thread = None
 face_scores = []
+face_value_history = []
 
-# FACE_POINTS = {
-#     "brow_left": 65,
-#     "brow_right": 295,
-#     "mouth": 13,
-#     "jaw": 152,
-#     "eye_left": 159,
-#     "eye_right": 386,
-# }
-
+# MediaPipe facial landmark indices for key emotional features
+# Maps human-readable names to the corresponding landmark indices
 FACE_POINTS = {
     # brows
     "brow_left_inner": 55,
@@ -59,7 +57,13 @@ FACE_POINTS = {
     "nose": 1,
 }
 
+# ============================================================================
+# LAZY LOADING FUNCTIONS
+# These functions defer module imports and resource initialization until needed
+# to minimize startup time when face detection is not immediately required
+# ============================================================================
 
+# Lazy load OpenCV to avoid unnecessary imports if not using face tracking
 def get_cv2():
     global cv2
     if cv2 is None:
@@ -67,7 +71,7 @@ def get_cv2():
         cv2 = cv2_module
     return cv2
 
-
+# Lazy load mediapipe and face landmarker to avoid long startup time and unnecessary imports if not using face tracking
 def get_mediapipe():
     global mp
     if mp is None:
@@ -75,7 +79,7 @@ def get_mediapipe():
         mp = mediapipe_module
     return mp
 
-
+# Lazy initialize the face landmarker when first needed
 def get_landmarker():
     global landmarker
 
@@ -96,7 +100,7 @@ def get_landmarker():
 
     return landmarker
 
-
+# Lazy initialize the camera when first needed
 def get_camera(camera_index=1):
     global cap
 
@@ -106,8 +110,14 @@ def get_camera(camera_index=1):
 
     return cap
 
+# ============================================================================
+# FACE ANALYSIS FUNCTIONS
+# Process facial blendshape data to calculate emotional metrics
+# ============================================================================
 
+# Calculate emotion values and overall face score based on blendshape data
 def calculate_face_values(data):
+    # Valence: positive/negative emotion (smiles vs frowns)
     valence = (
         data.get("mouthSmileLeft", 0)
         + data.get("mouthSmileRight", 0)
@@ -115,11 +125,13 @@ def calculate_face_values(data):
         - data.get("mouthFrownRight", 0)
     )
 
+    # Thinking: eye movement upward indicates contemplation
     thinking = (
         data.get("eyeLookUpLeft", 0)
         + data.get("eyeLookUpRight", 0)
     )
 
+    # Arousal: overall facial tension and alertness
     arousal = (
         data.get("jawOpen", 0)
         + data.get("eyeWideLeft", 0)
@@ -127,6 +139,7 @@ def calculate_face_values(data):
         + data.get("browInnerUp", 0)
     )
 
+    # Anxious: tightness, squinting, and furrowed brows
     anxious = (
         data.get("eyeSquintLeft", 0)
         + data.get("eyeSquintRight", 0)
@@ -136,12 +149,13 @@ def calculate_face_values(data):
         + data.get("mouthPressRight", 0)
     )
 
+    # Normalize all values to 0-100 range
     valence_percent = max(0, min(100, valence * 100))
     thinking_percent = max(0, min(100, thinking * 100))
     arousal_percent = max(0, min(100, arousal * 100))
     anxious_percent = max(0, min(100, anxious * 100))
 
-    # You can adjust this formula later
+    # Calculate overall face score as weighted average of emotional dimensions
     face_score = (
         0.25 * valence_percent
         + 0.25 * arousal_percent
@@ -159,7 +173,12 @@ def calculate_face_values(data):
         "face_score": face_score,
     }
 
+# ============================================================================
+# DATA TRANSMISSION FUNCTIONS
+# Send facial data to external systems (TouchDesigner via OSC, frontend via WebSocket)
+# ============================================================================
 
+# Send facial landmark positions to TouchDesigner via OSC
 def send_landmarks_to_td(result):
     if not result.face_landmarks:
         return
@@ -172,7 +191,7 @@ def send_landmarks_to_td(result):
         client.send_message(f"/pos/{name}_x", float(point.x))
         client.send_message(f"/pos/{name}_y", float(point.y))
 
-
+# Send calculated face emotion values and score to TouchDesigner via OSC
 def send_face_values_to_td(values):
     client.send_message("/face/valence", float(values["valence"]))
     client.send_message("/face/thinking", float(values["thinking"]))
@@ -180,7 +199,12 @@ def send_face_values_to_td(values):
     client.send_message("/face/anxious", float(values["anxious"]))
     client.send_message("/face/score", float(values["face_score"]))
 
+# ============================================================================
+# STREAM MANAGEMENT FUNCTIONS
+# Control the face detection thread and coordinate data collection
+# ============================================================================
 
+# Main loop to continuously read from camera, process face data, and send results to websocket and OSC
 def face_loop(camera_index=1, show=True):
     global face_running, face_scores
 
@@ -189,6 +213,7 @@ def face_loop(camera_index=1, show=True):
     camera = get_camera(camera_index)
     detector = get_landmarker()
 
+    # Continuous capture loop
     while face_running:
         ret, frame = camera.read()
 
@@ -204,8 +229,10 @@ def face_loop(camera_index=1, show=True):
             data=rgb_frame
         )
 
+        # Detect faces and extract blendshapes
         result = detector.detect(mp_image)
 
+        # Process facial blendshapes to calculate emotion values
         if result.face_blendshapes:
             blendshapes = result.face_blendshapes[0]
             data = {b.category_name: b.score for b in blendshapes}
@@ -214,6 +241,7 @@ def face_loop(camera_index=1, show=True):
 
         landmark_data = {}
 
+        # Extract and send facial landmarks
         if result.face_landmarks:
             landmarks = result.face_landmarks[0]
 
@@ -224,6 +252,7 @@ def face_loop(camera_index=1, show=True):
                     "y": float(point.y)
                 }
 
+            # Send data to frontend via WebSocket
             send_ws({
                 "type": "face",
                 "values": {
@@ -236,13 +265,15 @@ def face_loop(camera_index=1, show=True):
                 "positions": landmark_data
             })
 
-
+            # Store values for averaging
             face_value_history.append(values)
             face_scores.append(values["face_score"])
 
+            # Send data to TouchDesigner via OSC
             send_landmarks_to_td(result)
             send_face_values_to_td(values)
 
+            # Log results to console
             send_log(
                 "face:",
                 round(values["face_score"], 2),
@@ -265,7 +296,7 @@ def face_loop(camera_index=1, show=True):
 
         time.sleep(0.03)
 
-
+# Functions to control the face stream and access scores/values
 def start_face_stream(camera_index=1, show=True):
     global face_running, face_thread, face_scores, face_value_history
 
@@ -287,6 +318,7 @@ def start_face_stream(camera_index=1, show=True):
     print("Face stream started.")
 
 
+# Stop the face stream and clean up resources
 def stop_face_stream():
     global face_running, face_thread
 
@@ -299,17 +331,12 @@ def stop_face_stream():
     print("Face stream stopped.")
 
 
-def get_face_score():
-    if len(face_scores) == 0:
-        return 50
+# ============================================================================
+# DATA ACCESSOR FUNCTIONS
+# Retrieve aggregated facial data collected during stream
+# ============================================================================
 
-    return sum(face_scores) / len(face_scores)
-
-def face_details_score(valence, thinking, arousal, anxious):
-    return valence, thinking, arousal, anxious
-
-
-
+# Clean up resources when stopping face detection
 def close_face_camera():
     global cap
 
@@ -320,6 +347,7 @@ def close_face_camera():
     if cv2 is not None:
         cv2.destroyAllWindows()
 
+# Get the average of all emotion values collected during the stream
 def get_average_face_values():
     if len(face_value_history) == 0:
         return {

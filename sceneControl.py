@@ -1,3 +1,8 @@
+# Scene control and orchestration module
+# Main workflow controller for the interactive emotion assessment system
+# Coordinates facial/voice/text analysis with TouchDesigner visualization
+# Manages scene flow, user input, and result aggregation
+
 import random
 import time
 import keyboard
@@ -23,15 +28,15 @@ from voice_freqpitch import (
     stop_justification_recording
 )
 
-# --------------------
-# TD OSC
-# --------------------
+# ============================================================================
+# EXTERNAL COMMUNICATION (OSC to TouchDesigner)
+# ============================================================================
 td_client = SimpleUDPClient("127.0.0.1", 8001)
 sceneResult = SimpleUDPClient("127.0.0.1", 8003)
 
-# --------------------
-# SCENE SETTINGS
-# --------------------
+# ============================================================================
+# SCENE CONFIGURATION
+# ============================================================================
 SCENES = [1, 2, 3, 4, 5, 6]
 
 VIDEO_WELCOME = 0
@@ -41,16 +46,24 @@ VIDEO_JUSTIFY = 9
 
 SCENE_WAIT_SECONDS = 3
 
-# --------------------
-# AUDIO
-# --------------------
+# ============================================================================
+# AUDIO FILES
+# ============================================================================
 LET_BEGIN = "audio/perfect.mp3"
 NEXT_SCENE = "audio/next.mp3"
 SCENE_RESULT = "audio/result.mp3"
 RESPONSE_RECORDED = "audio/response.mp3"
 
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
 
 def send_video(index):
+    """Send video index command to TouchDesigner via OSC.
+    
+    Args:
+        index: Video index to display
+    """
     td_client.send_message("/td/video_index", int(index))
     td_client.send_message("/td/video_pulse", 1)
 
@@ -62,6 +75,14 @@ def send_video(index):
 
 
 def wait_for_key(valid_keys):
+    """Block until user presses one of the valid keys.
+    
+    Args:
+        valid_keys: List of acceptable key names
+        
+    Returns:
+        The key name that was pressed
+    """
     while True:
         event = keyboard.read_event()
 
@@ -73,6 +94,14 @@ def wait_for_key(valid_keys):
 
 
 def choose_response(scene_id):
+    """Prompt user to choose dialogue response (A/B/C/D).
+    
+    Args:
+        scene_id: Current scene number
+        
+    Returns:
+        Tuple of (choice, selected_text, text_result) or (None, None, None) if ESC pressed
+    """
     send_log("Choose A/B/C/D, or ESC to end.")
 
     send_ws({
@@ -120,6 +149,13 @@ def choose_response(scene_id):
 
 
 def handle_justification():
+    """Manage spoken justification recording phase.
+    
+    Controls: SPACE to record, TAB to skip, ESC to end
+    
+    Returns:
+        Tuple of (justification_text, should_end_system)
+    """
     send_video(VIDEO_JUSTIFY)
 
     send_log("Hold SPACE to add spoken justification.")
@@ -184,13 +220,25 @@ def handle_justification():
 
 
 def run_scene_flow():
+    """Main orchestration function for the entire scene flow.
+    
+    Manages:
+    1. Welcome screen and user introduction
+    2. Sequential scene presentation (randomized)
+    3. Real-time facial/voice/text capture during responses
+    4. Result calculation and display
+    5. Graceful shutdown
+    
+    Returns:
+        List of result dictionaries (one per scene completed)
+    """
     remaining_scenes = SCENES.copy()
     results = []
     question = 0
 
-    # --------------------
-    # WELCOME
-    # --------------------
+    # ============================================================================
+    # WELCOME PHASE
+    # ============================================================================
     send_video(VIDEO_WELCOME)
 
     send_log("Press ENTER when audience is ready.")
@@ -214,9 +262,9 @@ def run_scene_flow():
 
     play_audio(LET_BEGIN)
 
-    # --------------------
-    # SCENES
-    # --------------------
+    # ============================================================================
+    # SCENE FLOW (randomized order)
+    # ============================================================================
     while remaining_scenes:
         scene_id = random.choice(remaining_scenes)
         remaining_scenes.remove(scene_id)
@@ -239,9 +287,9 @@ def run_scene_flow():
 
         time.sleep(SCENE_WAIT_SECONDS)
 
-        # --------------------
-        # ANSWER PHASE START
-        # --------------------
+        # ============================================================================
+        # ANSWER CAPTURE PHASE: Real-time facial/voice/text analysis
+        # ============================================================================
         start_face_stream(camera_index=1, show=False)
         start_voice_stream()
 
@@ -267,9 +315,9 @@ def run_scene_flow():
         if choice is None or should_end:
             break
 
-        # --------------------
-        # COLLECT SCORES
-        # --------------------
+        # ============================================================================
+        # SCORE AGGREGATION: Combine modalities into single result
+        # ============================================================================
         face_values = get_average_face_values()
         voice_values = get_voice_values()
 
@@ -314,9 +362,9 @@ def run_scene_flow():
             "result": result
         })
 
-        # --------------------
-        # SCENE RESULT PAGE
-        # --------------------
+        # ============================================================================
+        # RESULT DISPLAY & NEXT SCENE PROMPT
+        # ============================================================================
         send_video(VIDEO_SCENE_RESULT)
         play_audio(SCENE_RESULT)
 
@@ -336,9 +384,9 @@ def run_scene_flow():
 
         play_audio(NEXT_SCENE)
 
-    # --------------------
-    # ENDING
-    # --------------------
+    # ============================================================================
+    # ENDING PHASE
+    # ============================================================================
     send_video(VIDEO_ENDING)
 
     send_ws({
@@ -353,6 +401,11 @@ def run_scene_flow():
 
 
 def send_log(message):
+    """Send log message to console and WebSocket clients.
+    
+    Args:
+        message: Text message to log
+    """
     print(message)
 
     send_ws({

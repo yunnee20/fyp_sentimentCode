@@ -100,11 +100,7 @@ def audio_callback(indata, frames, time, status):
         "score": get_voice_score()
     })
 
-    # print(
-    #     "energy:", round(energy, 3),
-    #     "pitch:", round(pitch, 1),
-    #     "avg pitch:", round(avg_pitch, 1)
-    # )
+
 
 
 def start_voice_stream():

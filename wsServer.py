@@ -1,3 +1,7 @@
+# WebSocket server for real-time frontend communication
+# Handles bidirectional data streaming between Python backend and JavaScript dashboard
+# Broadcasts sentiment data, state changes, and logging messages
+
 import asyncio
 import json
 import threading
@@ -40,6 +44,11 @@ async def broadcast(data):
 
 
 def send_ws(data):
+    """Send data to all connected WebSocket clients.
+    
+    Args:
+        data: Dictionary to broadcast as JSON
+    """
     global loop
 
     if loop is None:

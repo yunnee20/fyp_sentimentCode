@@ -1,3 +1,7 @@
+# Scene dialogue options for interactive scenarios
+# Maps scene number to multiple-choice dialogue options (A/B/C/D)
+# Each option represents different emotional responses to the scenario
+
 OPTIONS = {
     1: {
         "A": "Did I do something wrong?",

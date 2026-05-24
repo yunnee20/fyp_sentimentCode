@@ -1,3 +1,11 @@
+# Main entry point for the sentiment analysis system
+# Orchestrates the complete workflow:
+# 1. Starts WebSocket server for frontend communication
+# 2. Runs the interactive scene flow
+# 3. Calculates aggregated sentiment scores
+# 4. Generates and prints receipt
+# 5. Sends results to TouchDesigner
+
 import time
 from wsServer import start_ws_server, send_ws
 from sceneControl import run_scene_flow
@@ -63,14 +71,8 @@ def main():
         td_client.send_message(f"/receipt/{key}", value)
         
 
-    # send_ws({
-    #     "type": "final",
-    #     "result": total_result,
-    #     "receipt": receipt_data
-    # })
-
-    # uncomment when ready
-    # save_and_print_receipt(receipt_data)
+    # print receipt
+    save_and_print_receipt(receipt_data)
 
     close_face_camera()
 

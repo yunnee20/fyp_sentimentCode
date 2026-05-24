@@ -1,3 +1,7 @@
+# Text sentiment analysis module
+# Uses DistilRoBERTa-based emotion classifier to analyze emotional content
+# Classifies text into 7 emotion categories and derives sentiment metrics
+
 from transformers import pipeline
 
 text_emotion_model = pipeline(
@@ -7,6 +11,14 @@ text_emotion_model = pipeline(
 )
 
 def analyze_text_sentiment(text):
+    """Analyze emotional content of text.
+    
+    Args:
+        text: Input text to analyze (handles None and empty strings)
+        
+    Returns:
+        Dictionary with emotion scores (joy, neutral, anger, etc.) and derived metrics
+    """
     if text is None or text.strip() == "":
         return {
             "label": "neutral",

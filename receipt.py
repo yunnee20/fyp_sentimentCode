@@ -1,3 +1,7 @@
+# Receipt generation and printing module
+# Creates a formatted thermal printer receipt with sentiment analysis results
+# Handles cross-platform printing (Windows/macOS)
+
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import os

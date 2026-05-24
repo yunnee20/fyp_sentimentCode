@@ -1,4 +1,20 @@
+# Sentiment score calculation module
+# Combines individual modality scores (facial, vocal, textual) into
+# final authenticity assessment using weighted averaging
+
 def calculate_final_score(face_score, voice_score, text_score):
+    """Calculate final authenticity score from individual modalities.
+    
+    Weighting: 50% facial expression, 20% voice prosody, 30% text sentiment
+    
+    Args:
+        face_score: Facial emotion score (0-100)
+        voice_score: Voice energy/pitch score (0-100)
+        text_score: Text sentiment score (0-100)
+        
+    Returns:
+        Dictionary with component scores, final score, authenticity, and label
+    """
     final_score = (
         0.5 * face_score +
         0.2 * voice_score +

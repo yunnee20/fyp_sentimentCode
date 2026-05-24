@@ -1,7 +1,23 @@
+/**
+ * Real-time Sentiment Analysis Dashboard
+ * 
+ * Displays multi-modal emotion analysis data (facial, vocal, textual) on a live dashboard.
+ * Receives streaming data from Python backend via WebSocket and renders:
+ * - Facial landmark tracking with emotion overlays
+ * - Voice pitch and energy visualization
+ * - Text sentiment classification
+ * - Aggregated emotion metrics (radar chart, energy circles, waveform)
+ */
+
 const DESIGN_WIDTH = 1920;
 const DESIGN_HEIGHT = 1080;
 
-
+/**
+ * Global application state
+ * 
+ * Maintains current values for all emotion metrics and facial landmarks.
+ * Updated in real-time by WebSocket messages from the Python backend.
+ */
 let state = {
     face: {
         valence: 30,
@@ -65,6 +81,16 @@ let state = {
     log: "system waiting..."
 };
 
+// ============================================================================
+// RESPONSIVE DISPLAY
+// ============================================================================
+
+/**
+ * Responsive stage scaling
+ * 
+ * Maintains 16:9 aspect ratio regardless of window size.
+ * Scales all elements proportionally using CSS transform.
+ */
 function scaleStage() {
     const stage = document.getElementById("stage");
 
@@ -78,12 +104,27 @@ function scaleStage() {
 window.addEventListener("resize", scaleStage);
 scaleStage();
 
+// ============================================================================
+// TEXT RENDERING FUNCTIONS
+// ============================================================================
+
+/**
+ * Set progress bar width based on percentage value.
+ * 
+ * @param {string} id - Element ID of the progress bar
+ * @param {number} value - Value 0-100
+ */
 function setBar(id, value) {
     const el = document.getElementById(id);
     const maxWidth = 120;
     el.style.width = `${(Math.max(0, Math.min(100, value)) / 100) * maxWidth}px`;
 }
 
+/**
+ * Update all text display elements with current state values.
+ * 
+ * Renders facial metrics, facial landmarks, voice parameters, and text sentiment.
+ */
 function updateText() {
     // first section
     document.getElementById("valenceText").textContent = `${Math.round(state.face.valence)}%`;
@@ -125,6 +166,9 @@ function updateText() {
     // document.getElementById("logText").textContent = state.log;
 }
 
+/**
+ * Update all progress bars for facial emotion dimensions.
+ */
 function updateBars() {
     setBar("barValence", state.face.valence);
     setBar("barThinking", state.face.thinking);
@@ -133,6 +177,16 @@ function updateBars() {
     setBar("barScore", state.face.score);
 }
 
+// ============================================================================
+// CANVAS VISUALIZATION FUNCTIONS
+// ============================================================================
+
+/**
+ * Draw 5-axis radar chart of emotion dimensions.
+ * 
+ * Axes: score, thinking, arousal, anxious, valence
+ * Renders filled polygon based on current values (0-100 scale).
+ */
 function drawRadar() {
     const canvas = document.getElementById("radarCanvas");
     const ctx = canvas.getContext("2d");
@@ -189,8 +243,14 @@ function drawRadar() {
     ctx.stroke();
 }
 
-const wave = [];
+const wave = [];  // Circular buffer for pitch visualization
 
+/**
+ * Draw animated waveform of voice pitch over time.
+ * 
+ * Maintains rolling window of last 80 pitch samples.
+ * Normalized to 0-400 Hz range.
+ */
 function drawWave() {
     const canvas = document.getElementById("waveCanvas");
     const ctx = canvas.getContext("2d");
@@ -221,6 +281,14 @@ function drawWave() {
     ctx.stroke();
 }
 
+/**
+ * Draw dynamic circle with variable line thickness.
+ * 
+ * Thickness varies with the input value, providing visual feedback for energy levels.
+ * 
+ * @param {string} canvasId - Canvas element ID
+ * @param {number} value - Value 0-1 (normalized)
+ */
 function drawCircle(canvasId, value) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext("2d");
@@ -253,6 +321,12 @@ const ctx = canvas.getContext("2d");
 canvas.width = 990;
 canvas.height = 610;
 
+/**
+ * Start webcam feed for live facial visualization.
+ * 
+ * Requests browser camera access and streams video
+ * into the hidden HTML video element.
+ */
 async function startCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: true,
@@ -261,6 +335,12 @@ async function startCamera() {
   video.srcObject = stream;
 }
 
+/**
+ * Generate edge-detection camera effect.
+ * 
+ * Converts webcam feed into high-contrast outline visualization
+ * using Sobel edge detection to create surveillance-style aesthetics.
+ */
 function drawCameraOutline() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -307,24 +387,16 @@ function drawCameraOutline() {
   }
 
   ctx.putImageData(output, 0, 0);
-
-  // draw face landmarks AFTER this
-//   drawFace();
-
-  // requestAnimationFrame(drawCameraOutline);
 }
 
 
-
-// startCamera().then(() => {
-//   video.onloadedmetadata = () => {
-//     drawCameraOutline();
-    
-//   };
-  
-// });
-
-
+/**
+ * Draw facial landmark mesh and reactive rectangle blobs.
+ * 
+ * Uses streamed landmark coordinates from Python backend
+ * to render facial structure lines, tracked points,
+ * and dynamic emotion-reactive overlays.
+ */
 function drawFace() {
   const canvas = document.getElementById("faceCanvas");
   const ctx = canvas.getContext("2d");
@@ -334,17 +406,19 @@ function drawFace() {
 
   // ctx.clearRect(0, 0, w, h);
 
+  // Check whether a facial landmark exists before drawing
   function hasPoint(name) {
       return state.pos[name] !== undefined;
   }
 
+  // Convert normalized landmark coordinates into canvas pixel positions
   function p(name) {
       return {
       x: state.pos[name].x * w,
       y: state.pos[name].y * h
       };
   }
-
+  // Draw connection line between two facial landmarks
   function line(a, b) {
       if (!hasPoint(a) || !hasPoint(b)) return;
 
@@ -357,6 +431,7 @@ function drawFace() {
       ctx.stroke();
   }
 
+  // Draw dynamic rectangle blob that scales based on emotion intensity
   function rectBlob(name, value, label) {
       if (!hasPoint(name)) return;
 
@@ -439,12 +514,17 @@ function drawFace() {
   rectBlob("eye_right_top", state.face.anxious, "eye");
 }
 
+
+/**
+ * Main rendering loop.
+ * 
+ * Continuously updates all visual dashboard components
+ * including face visualization, waveform, radar chart,
+ * circles, bars, and text displays.
+ */
 function updateUI() {
-  // startCamera();
-  // drawFace();
   drawCameraOutline(); // background camera trace
   drawFace();  
-  // drawFacePanel();
   updateText();
   updateBars();
   drawRadar();
@@ -454,38 +534,30 @@ function updateUI() {
 
   requestAnimationFrame(updateUI);
 }
-// startCamera();   
+
 startCamera().then(() => {
   video.onloadedmetadata = () => {
     updateUI();
   };
 });
 
-/* temporary mock data */
-// setInterval(() => {
-//     state.face.valence = Math.random() * 100;
-//     state.face.thinking = Math.random() * 100;
-//     state.face.arousal = Math.random() * 100;
-//     state.face.anxious = Math.random() * 100;
-//     state.face.score =
-//         (state.face.valence +
-//         state.face.thinking +
-//         state.face.arousal +
-//         state.face.anxious) / 4;
-
-//     state.voice.energy = Math.random();
-//     state.voice.pitch = 80 + Math.random() * 220;
-//     state.voice.score = Math.random() * 100;
-
-//     state.log = "receiving simulated data...";
-// }, 300);
-
+// WebSocket connection to Python backend for receiving live emotion data
 const socket = new WebSocket("ws://localhost:8765");
 
 socket.onopen = () => {
   console.log("Connected to Python WebSocket");
 };
 
+/**
+ * Receive real-time streamed data from Python backend.
+ * 
+ * Updates dashboard state for:
+ * - facial analysis
+ * - voice analysis
+ * - text sentiment
+ * - interaction state
+ * - terminal logs
+ */
 socket.onmessage = (event) => {
   const msg = JSON.parse(event.data);
 
@@ -536,8 +608,11 @@ socket.onmessage = (event) => {
   }
 }
 
-
-
+/**
+ * Add timestamped system log message to terminal panel.
+ * 
+ * Maintains rolling list of latest log entries.
+ */
 function addTerminalLine(text) {
     const terminal = document.getElementById("terminal");
 

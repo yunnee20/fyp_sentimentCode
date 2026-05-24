@@ -1,3 +1,6 @@
+# Voice-to-text transcription module using Faster Whisper
+# Records audio from microphone and transcribes to text
+
 import sounddevice as sd
 from scipy.io.wavfile import write
 from faster_whisper import WhisperModel
@@ -7,6 +10,16 @@ global transcribed_text
 transcribed_text = "ready"
 
 def voice_to_text(duration=5, filename="test_voice.wav"):
+    """Record audio and transcribe to text.
+    
+    Args:
+        duration: Recording duration in seconds (default 5)
+        filename: Output WAV filename (default "test_voice.wav")
+        
+    Returns:
+        Transcribed text as lowercase string
+    """
+    
     sample_rate = 16000
 
     print("Recording...")
@@ -32,6 +45,12 @@ def voice_to_text(duration=5, filename="test_voice.wav"):
 
 
 def check_ready():
+    """Check if user said 'ready' in their transcription.
+    
+    Returns:
+        True if 'ready' was detected, False otherwise
+    """
+
     if "ready" in transcribed_text:
         print("Welcome to the game! Let's get started.")
         return True
