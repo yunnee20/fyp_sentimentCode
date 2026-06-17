@@ -1,0 +1,13 @@
+mediapipe
+opencv-python
+numpy
+librosa
+sounddevice
+scipy
+transformers
+torch
+faster-whisper
+websockets
+python-osc
+keyboard
+Pillow
